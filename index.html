@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>המורה החכם | SmartLearn AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e22;
+  --bg2:#12163a;
+  --panel:#161a42;
+  --panel2:#1c2150;
+  --line:rgba(242,224,177,.12);
+  --gold:#f2b84b;
+  --gold-dim:#8a6b2c;
+  --teal:#2dd4bf;
+  --coral:#ff6b6b;
+  --violet:#8b7cf6;
+  --text:#f3f1ea;
+  --text-dim:#a9aecb;
+  --radius:18px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --font-d:'Rubik',sans-serif;
+  --font-b:'Assistant',sans-serif;
+}
+body.light{
+  --bg:#f5f3ec;
+  --bg2:#eee9dc;
+  --panel:#ffffff;
+  --panel2:#fbf8f0;
+  --line:rgba(30,20,60,.1);
+  --text:#1c1c2e;
+  --text-dim:#5b5b78;
+  --shadow: 0 8px 22px rgba(30,20,60,.1);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-b);
+  background:radial-gradient(1200px 800px at 80% -10%, var(--bg2), var(--bg));
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background .4s,color .4s;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, rgba(242,184,75,.5) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 70% 20%, rgba(45,212,191,.5) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 80%, rgba(139,124,246,.5) 0, transparent 60%),
+    radial-gradient(1px 1px at 85% 65%, rgba(255,255,255,.4) 0, transparent 60%),
+    radial-gradient(1px 1px at 10% 90%, rgba(255,255,255,.3) 0, transparent 60%);
+  pointer-events:none; z-index:0; opacity:.8;
+}
+body.light::before{opacity:0;}
+.app{position:relative; z-index:1; max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column;}
+.screen{display:none; flex:1; flex-direction:column; padding:20px 16px 90px;}
+.screen.active{display:flex; animation:fadeIn .35s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)}}
+h1,h2,h3{font-family:var(--font-d);}
+button{font-family:var(--font-b); cursor:pointer; border:none;}
+input,select,textarea{font-family:var(--font-b);}
+
+/* ---------- generic components ---------- */
+.btn{
+  padding:14px 20px; border-radius:14px; font-weight:700; font-size:15px;
+  background:var(--panel2); color:var(--text); border:1px solid var(--line);
+  transition:transform .15s, box-shadow .15s; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn:active{transform:scale(.97);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e0982b); color:#22160a; box-shadow:0 6px 18px rgba(242,184,75,.35);}
+.btn-teal{background:linear-gradient(135deg,var(--teal),#1a9c8c); color:#04211d; box-shadow:0 6px 18px rgba(45,212,191,.3);}
+.btn-ghost{background:transparent; border:1px solid var(--line); color:var(--text-dim);}
+.btn-block{width:100%;}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px; box-shadow:var(--shadow);
+}
+.pill{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:100px;
+  background:var(--panel2); border:1px solid var(--line); font-size:12px; color:var(--text-dim); font-weight:600;
+}
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+  position:sticky; top:0; z-index:5; backdrop-filter:blur(10px);
+  background:linear-gradient(to bottom, var(--bg) 70%, transparent);
+}
+.topbar h2{font-size:19px;}
+.back-btn{
+  width:38px; height:38px; border-radius:12px; background:var(--panel2); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text);
+}
+.section-title{font-size:14px; color:var(--gold); font-weight:700; margin:22px 0 10px; display:flex; align-items:center; gap:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+.hidden{display:none !important;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px; font-weight:600;}
+.field select, .field input{
+  width:100%; padding:12px 14px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-size:15px;
+}
+.progress-outer{height:10px; background:var(--panel2); border-radius:100px; overflow:hidden; border:1px solid var(--line);}
+.progress-inner{height:100%; background:linear-gradient(90deg,var(--gold),var(--coral)); border-radius:100px; transition:width .5s;}
+
+/* ---------- bottom nav ---------- */
+.bottomnav{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:520px;
+  background:var(--panel); border-top:1px solid var(--line); display:flex; z-index:10;
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+.navbtn{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; color:var(--text-dim); font-size:11px; font-weight:600; padding:6px 0; border-radius:10px;}
+.navbtn.active{color:var(--gold);}
+.navbtn .ic{font-size:20px;}
+
+/* ---------- splash ---------- */
+#screen-splash{align-items:center; justify-content:center; text-align:center; padding:40px 24px;}
+.logo-orb{
+  width:96px; height:96px; border-radius:28px; margin:0 auto 18px;
+  background:conic-gradient(from 210deg, var(--gold), var(--coral), var(--violet), var(--teal), var(--gold));
+  display:flex; align-items:center; justify-content:center; font-size:44px;
+  animation:spin 10s linear infinite; box-shadow:0 0 40px rgba(242,184,75,.35);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-orb span{display:inline-block; animation:counterspin 10s linear infinite;}
+@keyframes counterspin{to{transform:rotate(-360deg)}}
+#screen-splash h1{font-size:30px; margin-bottom:6px;}
+#screen-splash p.tag{color:var(--text-dim); margin-bottom:30px; font-size:14px;}
+.auth-stack{width:100%; display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+.auth-btn{background:var(--panel); border:1px solid var(--line); color:var(--text); font-weight:600; font-size:14px;}
+
+/* ---------- onboarding ---------- */
+.step-dots{display:flex; gap:6px; justify-content:center; margin-bottom:20px;}
+.step-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+.step-dots span.on{background:var(--gold);}
+.avatar-pick{display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
+.emoji-opt{width:52px; height:52px; border-radius:16px; background:var(--panel2); border:2px solid transparent; font-size:26px; display:flex; align-items:center; justify-content:center;}
+.emoji-opt.sel{border-color:var(--gold);}
+
+/* ---------- home ---------- */
+.home-header{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
+.avatar-circle{
+  width:58px; height:58px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; border:2px solid var(--gold); position:relative; flex-shrink:0;
+}
+.lvl-badge{position:absolute; bottom:-6px; left:-6px; background:var(--gold); color:#22160a; font-size:10px; font-weight:800; border-radius:8px; padding:1px 6px;}
+.home-header .greet{flex:1;}
+.home-header .greet h2{font-size:17px; margin-bottom:2px;}
+.stat-row{display:flex; gap:8px;}
+.stat-chip{display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:var(--text-dim);}
+.ring-wrap{position:relative; width:74px; height:74px; flex-shrink:0;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-txt{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; font-size:11px; font-weight:800;}
+.mission-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+.mission-item:last-child{border-bottom:none;}
+.mission-check{width:22px; height:22px; border-radius:7px; border:2px solid var(--teal); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;}
+.mission-check.done{background:var(--teal); color:#04211d;}
+.mission-item .mtext{flex:1; font-size:13.5px;}
+.mission-item .mxp{font-size:11px; color:var(--gold); font-weight:700;}
+.big-actions{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:18px 0;}
+.big-actions button{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:12px 4px; display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--text);}
+.big-actions .ic2{font-size:22px;}
+.tip-card{background:linear-gradient(135deg, rgba(139,124,246,.18), rgba(45,212,191,.1)); border:1px solid var(--line);}
+.chart-canvas{width:100%; height:110px; display:block;}
+
+/* ---------- subjects ---------- */
+.subject-tile{
+  background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 8px; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.subject-tile .ic3{font-size:26px;}
+.subject-tile .sname{font-size:11.5px; font-weight:700;}
+.subject-tile .sprog{width:100%; height:4px; background:var(--panel2); border-radius:4px; overflow:hidden; margin-top:2px;}
+.subject-tile .sprog i{display:block; height:100%; background:var(--teal);}
+.search-box{display:flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin-bottom:14px;}
+.search-box input{background:none; border:none; outline:none; color:var(--text); flex:1; font-size:14px;}
+
+/* ---------- topic ---------- */
+.topic-row{display:flex; align-items:center; justify-content:space-between; padding:14px; border-radius:14px; background:var(--panel); border:1px solid var(--line); margin-bottom:10px;}
+.topic-row .tname{font-weight:700; font-size:14px;}
+.topic-row .tsub{font-size:11px; color:var(--text-dim);}
+.diff-tabs{display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px;}
+.diff-tab{padding:8px 14px; border-radius:100px; background:var(--panel2); border:1px solid var(--line); font-size:12.5px; font-weight:700; color:var(--text-dim); white-space:nowrap;}
+.diff-tab.sel{background:var(--gold); color:#22160a; border-color:var(--gold);}
+
+/* ---------- chat ---------- */
+#screen-chat{padding-bottom:150px;}
+.chat-log{display:flex; flex-direction:column; gap:12px; flex:1; padding:6px 2px;}
+.msg{max-width:82%; padding:12px 14px; border-radius:16px; font-size:14px; line-height:1.6; white-space:pre-wrap;}
+.msg.ai{align-self:flex-start; background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px;}
+.msg.user{align-self:flex-end; background:linear-gradient(135deg,var(--violet),#6a5acd); color:#fff; border-bottom-right-radius:4px;}
+.quick-actions{display:flex; gap:8px; overflow-x:auto; padding:10px 2px; margin-bottom:6px;}
+.quick-actions button{white-space:nowrap; background:var(--panel2); border:1px solid var(--line); color:var(--text-dim); border-radius:100px; padding:8px 14px; font-size:12px; font-weight:700;}
+.chat-input-bar{
+  position:fixed; bottom:64px; left:50%; transform:translateX(-50%); width:100%; max-width:520px;
+  display:flex; gap:8px; padding:10px 16px; background:var(--bg); border-top:1px solid var(--line);
+}
+.chat-input-bar input{flex:1; padding:12px 16px; border-radius:100px; background:var(--panel2); border:1px solid var(--line); color:var(--text);}
+.chat-input-bar button{width:46px; height:46px; border-radius:50%; background:var(--gold); color:#22160a; font-size:18px; flex-shrink:0;}
+.typing-dots span{display:inline-block; width:6px; height:6px; background:var(--text-dim); border-radius:50%; margin:0 2px; animation:blink 1.2s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;} .typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2} 40%{opacity:1}}
+
+/* ---------- practice / quiz ---------- */
+.q-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px;}
+.q-meta{display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); margin-bottom:10px;}
+.q-text{font-size:16px; font-weight:700; line-height:1.6; margin-bottom:16px;}
+.opt-btn{
+  display:block; width:100%; text-align:right; padding:14px 16px; border-radius:14px; background:var(--panel2);
+  border:1px solid var(--line); margin-bottom:10px; font-size:14px; color:var(--text); transition:.15s;
+}
+.opt-btn.correct{background:rgba(45,212,191,.2); border-color:var(--teal);}
+.opt-btn.wrong{background:rgba(255,107,107,.2); border-color:var(--coral);}
+.opt-btn.disabled{pointer-events:none; opacity:.7;}
+.explain-box{background:var(--panel2); border-radius:12px; padding:14px; font-size:13.5px; color:var(--text-dim); margin-top:12px; border-inline-start:3px solid var(--teal); display:none;}
+.explain-box.show{display:block;}
+.timer-badge{font-weight:800; color:var(--coral); font-variant-numeric:tabular-nums;}
+.loader{display:flex; align-items:center; justify-content:center; gap:10px; padding:40px 0; color:var(--text-dim); font-size:14px;}
+.spin-ic{width:22px; height:22px; border:3px solid var(--line); border-top-color:var(--gold); border-radius:50%; animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- results ---------- */
+.result-hero{text-align:center; padding:20px 0;}
+.result-hero .score{font-size:52px; font-family:var(--font-d); font-weight:800; color:var(--gold);}
+.result-hero p{color:var(--text-dim); font-size:13px;}
+
+/* ---------- achievements ---------- */
+.badge-card{display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px;}
+.badge-ic{width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--panel2); flex-shrink:0;}
+.badge-card.unlocked .badge-ic{background:linear-gradient(135deg,var(--gold),#e0982b);}
+.badge-card.locked{opacity:.45;}
+.badge-name{font-weight:700; font-size:14px;}
+.badge-desc{font-size:11.5px; color:var(--text-dim);}
+
+/* ---------- avatar/shop ---------- */
+.avatar-preview{width:120px; height:120px; border-radius:32px; margin:10px auto 20px; display:flex; align-items:center; justify-content:center; font-size:56px; border:3px solid var(--gold); position:relative;}
+.color-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:16px;}
+.color-dot{width:34px; height:34px; border-radius:50%; border:3px solid transparent;}
+.color-dot.sel{border-color:var(--text);}
+.shop-item{display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px;}
+.shop-item .sic{font-size:26px; width:44px; text-align:center;}
+.shop-item .sinfo{flex:1;}
+.shop-item .sname2{font-weight:700; font-size:13.5px;}
+.buy-btn{background:var(--gold); color:#22160a; font-weight:800; font-size:12px; padding:8px 14px; border-radius:10px;}
+.buy-btn:disabled{background:var(--panel2); color:var(--text-dim);}
+
+/* ---------- mistakes ---------- */
+.mistake-card{background:var(--panel); border:1px solid var(--line); border-inline-start:3px solid var(--coral); border-radius:14px; padding:12px 14px; margin-bottom:10px;}
+
+/* ---------- parent/teacher ---------- */
+.stat-block{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
+.stat-block:last-child{border-bottom:none;}
+.toggle{width:44px; height:26px; border-radius:100px; background:var(--panel2); border:1px solid var(--line); position:relative; flex-shrink:0;}
+.toggle.on{background:var(--teal);}
+.toggle::after{content:""; position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:.2s;}
+.toggle.on::after{transform:translateX(-18px);}
+
+/* ---------- future tech placeholder ---------- */
+.future-card{background:var(--panel); border:1px dashed var(--line); border-radius:14px; padding:14px; margin-bottom:10px; display:flex; gap:12px; align-items:center;}
+.future-card .fic{font-size:24px;}
+.soon-pill{background:var(--violet); color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; margin-inline-start:auto;}
+
+/* toast */
+#toast{position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-60px); background:var(--panel); border:1px solid var(--gold); color:var(--text); padding:12px 20px; border-radius:100px; font-size:13px; font-weight:700; z-index:100; transition:transform .3s; box-shadow:var(--shadow);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:0; height:0;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app">
+
+<!-- ================= SPLASH ================= -->
+<section class="screen active" id="screen-splash">
+  <div class="logo-orb"><span>🪐</span></div>
+  <h1>המורה החכם</h1>
+  <p class="tag">SmartLearn AI — מורה פרטי אישי, זמין 24 שעות ביממה</p>
+  <div class="auth-stack">
+    <button class="btn auth-btn btn-block" onclick="fakeLogin('Google')">🔵 המשך עם Google</button>
+    <button class="btn auth-btn btn-block" onclick="fakeLogin('Apple')">🍎 המשך עם Apple</button>
+    <button class="btn auth-btn btn-block" onclick="fakeLogin('Microsoft')">🟦 המשך עם Microsoft</button>
+    <button class="btn auth-btn btn-block" onclick="fakeLogin('אימייל')">✉️ המשך עם אימייל</button>
+  </div>
+  <button class="btn btn-ghost btn-block" onclick="goGuest()">👤 המשך כאורח</button>
+  <button class="pill" style="margin-top:18px;" onclick="showScreen('parent-login')">🧑‍🏫 כניסת הורים / מורים</button>
+</section>
+
+<!-- ================= ONBOARDING ================= -->
+<section class="screen" id="screen-onboard">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('splash')">→</button><h2>הרשמה מהירה</h2><div style="width:38px"></div></div>
+  <div class="step-dots"><span id="dot1" class="on"></span><span id="dot2"></span><span id="dot3"></span></div>
+
+  <div id="ob-step1">
+    <div class="field"><label>שם פרטי</label><input id="ob-name" placeholder="איך לקרוא לך?"></div>
+    <div class="field"><label>גיל</label><input id="ob-age" type="number" placeholder="למשל 12"></div>
+    <div class="field"><label>כיתה</label>
+      <select id="ob-grade">
+        <option>גן חובה</option><option>א'</option><option>ב'</option><option>ג'</option><option>ד'</option><option>ה'</option><option>ו'</option>
+        <option>ז'</option><option>ח'</option><option>ט'</option><option selected>י'</option><option>י"א</option><option>י"ב</option>
+      </select>
+    </div>
+    <button class="btn btn-gold btn-block" onclick="obNext(2)">המשך</button>
+  </div>
+
+  <div id="ob-step2" class="hidden">
+    <div class="field"><label>שפה</label>
+      <select id="ob-lang"><option value="he">עברית</option><option value="en">English</option><option value="ar">العربية</option><option value="ru">Русский</option></select>
+    </div>
+    <div class="field"><label>מדינה</label>
+      <select id="ob-country"><option>ישראל</option><option>ארה"ב</option><option>קנדה</option><option>אחר</option></select>
+    </div>
+    <div class="field"><label>תוכנית לימודים</label>
+      <select id="ob-curriculum"><option>תוכנית משרד החינוך</option><option>בגרויות מוגברות</option><option>לימוד עצמאי / העשרה</option></select>
+    </div>
+    <button class="btn btn-gold btn-block" onclick="obNext(3)">המשך</button>
+  </div>
+
+  <div id="ob-step3" class="hidden">
+    <p style="text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:12px;">בחר/י אווטאר אישי</p>
+    <div class="avatar-preview" id="ob-avatar-preview">🦊</div>
+    <div class="avatar-pick" id="ob-emoji-picker"></div>
+    <button class="btn btn-teal btn-block" style="margin-top:22px;" onclick="finishOnboarding()">בואו נתחיל ללמוד 🚀</button>
+  </div>
+</section>
+
+<!-- ================= PARENT LOGIN (simple) ================= -->
+<section class="screen" id="screen-parent-login">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('splash')">→</button><h2>כניסת הורים / מורים</h2><div style="width:38px"></div></div>
+  <div class="card">
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px;">מצב תצוגה בלבד (הדגמה) — צופה בנתוני הלמידה המקומיים של המכשיר.</p>
+    <button class="btn btn-gold btn-block" onclick="showScreen('parent-dash')">🧑‍👩‍👧 לוח בקרה להורים</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-teal btn-block" onclick="showScreen('teacher-dash')">🧑‍🏫 אזור מורים</button>
+  </div>
+</section>
+
+<!-- ================= HOME ================= -->
+<section class="screen" id="screen-home">
+  <div class="topbar">
+    <h2 style="font-size:22px;">🪐 המורה החכם</h2>
+    <button class="back-btn" onclick="showScreen('settings')">⚙️</button>
+  </div>
+
+  <div class="home-header">
+    <div class="avatar-circle" id="home-avatar" style="background:#2a2f5c;">🦊<span class="lvl-badge" id="home-level">1</span></div>
+    <div class="greet">
+      <h2 id="home-greet">שלום!</h2>
+      <div class="stat-row">
+        <span class="stat-chip">🔥 <span id="home-streak">0</span> ימים</span>
+        <span class="stat-chip">🪙 <span id="home-coins">0</span></span>
+        <span class="stat-chip">⭐ <span id="home-xp">0</span> XP</span>
+      </div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="74" height="74"><circle cx="37" cy="37" r="30" stroke="var(--panel2)" stroke-width="7" fill="none"/><circle id="goal-ring" cx="37" cy="37" r="30" stroke="var(--teal)" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="188"/></svg>
+      <div class="ring-txt"><span id="goal-txt">0%</span><span style="color:var(--text-dim); font-weight:600;">יעד יומי</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <b style="font-size:13px;">התקדמות שבועית (דקות למידה)</b>
+    </div>
+    <canvas class="chart-canvas" id="week-chart"></canvas>
+  </div>
+
+  <div class="section-title">✅ משימות יומיות</div>
+  <div class="card" id="daily-missions"></div>
+
+  <div class="big-actions">
+    <button onclick="showScreen('subjects')"><span class="ic2">📚</span>למידה</button>
+    <button onclick="openChat()"><span class="ic2">🤖</span>AI Chat</button>
+    <button onclick="showScreen('subjects')"><span class="ic2">✏️</span>תרגול</button>
+    <button onclick="showScreen('quiz-setup')"><span class="ic2">📝</span>מבחנים</button>
+    <button onclick="showToast('בקרוב! 🎮')"><span class="ic2">🎮</span>משחקים</button>
+    <button onclick="showScreen('achievements')"><span class="ic2">🏆</span>פרסים</button>
+    <button onclick="showScreen('mistakes')"><span class="ic2">🔁</span>טעויות</button>
+    <button onclick="showScreen('shop')"><span class="ic2">🛍️</span>חנות</button>
+  </div>
+
+  <div class="section-title">📰 טיפ לימודי היום</div>
+  <div class="card tip-card" id="daily-tip">טוען...</div>
+
+  <div class="section-title">🔮 טכנולוגיות עתידיות</div>
+  <div class="future-card"><span class="fic">🥽</span><div><b style="font-size:13px;">מעבדת VR</b><div style="font-size:11px; color:var(--text-dim);">שיעור בתוך מעבדה וירטואלית</div></div><span class="soon-pill">בקרוב</span></div>
+  <div class="future-card"><span class="fic">🪐</span><div><b style="font-size:13px;">טיול במערכת השמש (AR)</b><div style="font-size:11px; color:var(--text-dim);">מודלים תלת־ממדיים באוויר</div></div><span class="soon-pill">בקרוב</span></div>
+</section>
+
+<!-- ================= SUBJECTS ================= -->
+<section class="screen" id="screen-subjects">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>בחירת מקצוע</h2><div style="width:38px"></div></div>
+  <div class="search-box">🔍<input id="subject-search" placeholder="חיפוש מקצוע..." oninput="renderSubjects()"></div>
+  <div class="grid3" id="subjects-grid"></div>
+</section>
+
+<!-- ================= TOPICS ================= -->
+<section class="screen" id="screen-topics">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('subjects')">→</button><h2 id="topics-title">נושאים</h2><div style="width:38px"></div></div>
+  <div class="diff-tabs" id="topics-list"></div>
+  <div class="section-title">🎯 מה תרצו לעשות?</div>
+  <div class="grid2">
+    <button class="btn btn-teal" onclick="startPractice()">✏️ תרגול חופשי</button>
+    <button class="btn btn-gold" onclick="openQuizSetupFromTopic()">📝 מבחן בנושא</button>
+    <button class="btn btn-ghost" onclick="openChat()">🤖 שאל את ה-AI</button>
+    <button class="btn btn-ghost" onclick="showToast('פותח מצלמה... (הדגמה) 📷')">📷 צלם ותרגל</button>
+  </div>
+</section>
+
+<!-- ================= AI CHAT ================= -->
+<section class="screen" id="screen-chat">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>🤖 שיחה עם ה-AI</h2><div style="width:38px"></div></div>
+  <div class="quick-actions">
+    <button onclick="quickPrompt('תסביר כמו לילד בן 7')">🧒 כמו לילד בן 7</button>
+    <button onclick="quickPrompt('תסביר כמו לתלמיד תיכון')">🎒 כמו תיכוניסט</button>
+    <button onclick="quickPrompt('תסביר ברמת אוניברסיטה')">🎓 רמת אוניברסיטה</button>
+    <button onclick="quickPrompt('לא הבנתי, תסביר אחרת')">❓ לא הבנתי</button>
+    <button onclick="quickPrompt('תן דוגמא')">💡 תן דוגמא</button>
+  </div>
+  <div class="chat-log" id="chat-log"></div>
+  <div class="chat-input-bar">
+    <button onclick="sendChat()">↩</button>
+    <input id="chat-input" placeholder="שאל/י כל שאלה..." onkeydown="if(event.key==='Enter')sendChat()">
+  </div>
+</section>
+
+<!-- ================= PRACTICE ================= -->
+<section class="screen" id="screen-practice">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('topics')">→</button><h2>✏️ תרגול</h2>
+    <button class="back-btn" onclick="showToast('נשמר להמשך אח״כ ✅')">⏸</button>
+  </div>
+  <div id="practice-area"></div>
+</section>
+
+<!-- ================= QUIZ SETUP ================= -->
+<section class="screen" id="screen-quiz-setup">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>📝 בניית מבחן</h2><div style="width:38px"></div></div>
+  <div class="field"><label>מקצוע</label><select id="quiz-subject"></select></div>
+  <div class="field"><label>רמת קושי</label>
+    <select id="quiz-diff"><option>קל</option><option selected>בינוני</option><option>קשה</option><option>רמת בגרות</option></select>
+  </div>
+  <div class="field"><label>מספר שאלות</label>
+    <select id="quiz-count"><option>3</option><option selected>5</option><option>8</option></select>
+  </div>
+  <div class="field"><label>זמן לשאלה (שניות)</label>
+    <select id="quiz-time"><option value="0">ללא הגבלה</option><option value="30" selected>30</option><option value="60">60</option></select>
+  </div>
+  <button class="btn btn-gold btn-block" onclick="startQuiz()">🚀 התחל מבחן</button>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="screen" id="screen-quiz">
+  <div class="topbar"><button class="back-btn" onclick="confirmExitQuiz()">→</button><h2 id="quiz-progress-txt">שאלה 1</h2><span class="timer-badge" id="quiz-timer">--</span></div>
+  <div class="progress-outer" style="margin-bottom:14px;"><div class="progress-inner" id="quiz-progress-bar" style="width:0%"></div></div>
+  <div id="quiz-area"></div>
+</section>
+
+<!-- ================= QUIZ RESULTS ================= -->
+<section class="screen" id="screen-quiz-results">
+  <div class="topbar"><h2>תוצאות המבחן</h2></div>
+  <div class="result-hero">
+    <div class="score" id="qr-score">0%</div>
+    <p id="qr-sub">סיכום התוצאות שלך</p>
+  </div>
+  <div class="grid2" style="margin-bottom:16px;">
+    <div class="card" style="text-align:center;"><b id="qr-correct">0</b><div style="font-size:11px; color:var(--text-dim);">תשובות נכונות</div></div>
+    <div class="card" style="text-align:center;"><b id="qr-xp">0</b><div style="font-size:11px; color:var(--text-dim);">XP שהתקבל</div></div>
+  </div>
+  <div class="section-title">📋 סקירת שאלות</div>
+  <div id="qr-review"></div>
+  <button class="btn btn-teal btn-block" style="margin-top:14px;" onclick="showScreen('home')">חזרה למסך הבית</button>
+</section>
+
+<!-- ================= MISTAKES ================= -->
+<section class="screen" id="screen-mistakes">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>🔁 חזרה על טעויות</h2><div style="width:38px"></div></div>
+  <div id="mistakes-list"></div>
+</section>
+
+<!-- ================= ACHIEVEMENTS ================= -->
+<section class="screen" id="screen-achievements">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>🏆 הישגים</h2><div style="width:38px"></div></div>
+  <div id="achievements-list"></div>
+</section>
+
+<!-- ================= AVATAR ================= -->
+<section class="screen" id="screen-avatar">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('settings')">→</button><h2>🦊 עריכת אווטאר</h2><div style="width:38px"></div></div>
+  <div class="avatar-preview" id="av-preview">🦊</div>
+  <div class="section-title">בחר/י דמות</div>
+  <div class="avatar-pick" id="av-emoji-picker"></div>
+  <div class="section-title">צבע רקע</div>
+  <div class="color-row" id="av-color-picker"></div>
+  <button class="btn btn-gold btn-block" onclick="saveAvatar()">💾 שמור</button>
+</section>
+
+<!-- ================= SHOP ================= -->
+<section class="screen" id="screen-shop">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>🛍️ חנות</h2><span class="pill">🪙 <span id="shop-coins">0</span></span></div>
+  <div id="shop-list"></div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="screen" id="screen-settings">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>⚙️ הגדרות</h2><div style="width:38px"></div></div>
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">🔑 מפתח API אישי (לבדיקות בלבד)</div>
+    <p style="font-size:11.5px; color:var(--text-dim); margin-bottom:10px;">
+      נשמר רק בדפדפן הזה, לא בקוד ולא באתר. נדרש כדי שה-AI יעבוד כשפותחים
+      את הקובץ מחוץ ל-Claude.ai (לפני שמגדירים Worker). קבל מפתח ב-console.anthropic.com.
+    </p>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." style="width:100%; padding:10px 12px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); color:var(--text); margin-bottom:10px;">
+    <div class="grid2">
+      <button class="btn btn-teal" onclick="saveApiKey()">שמור מפתח</button>
+      <button class="btn btn-ghost" onclick="clearApiKey()">מחק מפתח</button>
+    </div>
+    <div id="api-key-status" style="font-size:11.5px; color:var(--text-dim); margin-top:8px;"></div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="stat-block"><span>מצב כהה</span><button class="toggle on" id="dark-toggle" onclick="toggleDark()"></button></div>
+    <div class="stat-block"><span>שפה</span>
+      <select id="settings-lang" onchange="changeLang(this.value)" style="background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+        <option value="he">עברית</option><option value="en">English</option>
+      </select>
+    </div>
+    <div class="stat-block"><span>יעד יומי (דקות)</span>
+      <select id="settings-goal" onchange="setDailyGoal(this.value)" style="background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+        <option value="10">10</option><option value="20">20</option><option value="30" selected>30</option><option value="60">60</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-block" style="margin-bottom:10px;" onclick="showScreen('avatar')">🦊 עריכת אווטאר</button>
+  <button class="btn btn-block" style="margin-bottom:10px;" onclick="showScreen('statistics')">📊 סטטיסטיקות מלאות</button>
+  <button class="btn btn-block" style="margin-bottom:10px;" onclick="showScreen('parent-dash')">👨‍👩‍👧 לוח בקרה להורים</button>
+  <button class="btn btn-ghost btn-block" style="color:var(--coral); margin-bottom:10px;" onclick="resetProgress()">🗑️ איפוס התקדמות</button>
+  <button class="btn btn-ghost btn-block" onclick="logout()">🚪 התנתקות</button>
+</section>
+
+<!-- ================= STATISTICS ================= -->
+<section class="screen" id="screen-statistics">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('settings')">→</button><h2>📊 סטטיסטיקות</h2><div style="width:38px"></div></div>
+  <div class="card" style="margin-bottom:14px;"><b style="font-size:13px;">זמן למידה - 7 ימים אחרונים</b><canvas class="chart-canvas" id="stats-week-chart"></canvas></div>
+  <div class="section-title">💪 נושאים חזקים וחלשים</div>
+  <div id="stats-subjects"></div>
+  <div class="section-title">🔮 תחזית ציונים (הערכה)</div>
+  <div class="card" id="stats-forecast"></div>
+</section>
+
+<!-- ================= PARENT DASHBOARD ================= -->
+<section class="screen" id="screen-parent-dash">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>👨‍👩‍👧 לוח בקרה להורים</h2><div style="width:38px"></div></div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="stat-block"><span>זמן למידה היום</span><b id="pd-today">0 דק'</b></div>
+    <div class="stat-block"><span>רצף ימים</span><b id="pd-streak">0</b></div>
+    <div class="stat-block"><span>רמה נוכחית</span><b id="pd-level">1</b></div>
+    <div class="stat-block"><span>ציון ממוצע בתרגולים</span><b id="pd-avg">0%</b></div>
+  </div>
+  <div class="section-title">📉 נושאים חלשים לחיזוק</div>
+  <div class="card" id="pd-weak"></div>
+  <div class="section-title">🎛️ בקרת הורים</div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="stat-block"><span>יעד למידה יומי (דקות)</span>
+      <select id="pd-goal" onchange="setDailyGoal(this.value)" style="background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+        <option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="60">60</option>
+      </select>
+    </div>
+    <div class="stat-block"><span>חסימת משחקים</span><button class="toggle" id="pd-block-toggle" onclick="toggleBlockGames()"></button></div>
+  </div>
+  <div class="section-title">✉️ שליחת הודעה לתלמיד/ה</div>
+  <div class="card">
+    <input id="pd-msg" placeholder="כתוב הודעה מעודדת..." style="width:100%; padding:10px 12px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); color:var(--text); margin-bottom:10px;">
+    <button class="btn btn-teal btn-block" onclick="sendParentMessage()">שלח הודעה</button>
+  </div>
+</section>
+
+<!-- ================= TEACHER DASHBOARD ================= -->
+<section class="screen" id="screen-teacher-dash">
+  <div class="topbar"><button class="back-btn" onclick="showScreen('home')">→</button><h2>🧑‍🏫 אזור מורים</h2><div style="width:38px"></div></div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="stat-block"><span>קוד כיתה</span><b id="class-code">—</b></div>
+    <button class="btn btn-gold btn-block" onclick="generateClassCode()">➕ צור כיתה חדשה</button>
+  </div>
+  <div class="section-title">👥 תלמידים (הדגמה)</div>
+  <div class="card" id="teacher-students"></div>
+  <div class="section-title">📝 שיעורי בית</div>
+  <div class="card">
+    <input id="hw-text" placeholder="תיאור שיעורי הבית..." style="width:100%; padding:10px 12px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); color:var(--text); margin-bottom:10px;">
+    <button class="btn btn-teal btn-block" onclick="assignHomework()">שלח לכיתה</button>
+  </div>
+</section>
+
+</div><!-- /.app -->
+
+<!-- ================= BOTTOM NAV ================= -->
+<div class="bottomnav" id="bottomnav">
+  <button class="navbtn active" data-nav="home" onclick="showScreen('home')"><span class="ic">🏠</span>בית</button>
+  <button class="navbtn" data-nav="subjects" onclick="showScreen('subjects')"><span class="ic">📚</span>למידה</button>
+  <button class="navbtn" data-nav="chat" onclick="openChat()"><span class="ic">🤖</span>AI</button>
+  <button class="navbtn" data-nav="achievements" onclick="showScreen('achievements')"><span class="ic">🏆</span>הישגים</button>
+  <button class="navbtn" data-nav="settings" onclick="showScreen('settings')"><span class="ic">⚙️</span>הגדרות</button>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const SUBJECTS = [
+  {id:'math', name:'מתמטיקה', ic:'🔢'}, {id:'english', name:'אנגלית', ic:'🔤'},
+  {id:'hebrew', name:'עברית', ic:'📖'}, {id:'science', name:'מדעים', ic:'🔬'},
+  {id:'biology', name:'ביולוגיה', ic:'🧬'}, {id:'chemistry', name:'כימיה', ic:'⚗️'},
+  {id:'physics', name:'פיזיקה', ic:'🪐'}, {id:'history', name:'היסטוריה', ic:'🏛️'},
+  {id:'civics', name:'אזרחות', ic:'⚖️'}, {id:'literature', name:'ספרות', ic:'📚'},
+  {id:'grammar', name:'לשון', ic:'✍️'}, {id:'geography', name:'גאוגרפיה', ic:'🌍'},
+  {id:'cs', name:'מדעי המחשב', ic:'💻'}, {id:'coding', name:'תכנות', ic:'👨‍💻'},
+  {id:'robotics', name:'רובוטיקה', ic:'🤖'}, {id:'ai', name:'בינה מלאכותית', ic:'🧠'},
+  {id:'electronics', name:'אלקטרוניקה', ic:'🔌'}, {id:'astronomy', name:'אסטרונומיה', ic:'🔭'},
+  {id:'music', name:'מוזיקה', ic:'🎵'}, {id:'art', name:'אמנות', ic:'🎨'},
+  {id:'economics', name:'כלכלה', ic:'📈'}, {id:'accounting', name:'חשבונאות', ic:'🧾'},
+  {id:'psychology', name:'פסיכולוגיה', ic:'🧩'}, {id:'philosophy', name:'פילוסופיה', ic:'🦉'},
+  {id:'finance', name:'חינוך פיננסי', ic:'💰'}, {id:'entrepreneurship', name:'יזמות', ic:'🚀'},
+  {id:'cyber', name:'סייבר', ic:'🛡️'}, {id:'design', name:'עיצוב', ic:'🖌️'},
+  {id:'video', name:'עריכת וידאו', ic:'🎬'}, {id:'photoshop', name:'פוטושופ', ic:'🖼️'},
+  {id:'blender', name:'בלנדר', ic:'🧊'}, {id:'unity', name:'Unity', ic:'🎮'},
+  {id:'unreal', name:'Unreal Engine', ic:'🕹️'}, {id:'roblox', name:'Roblox Studio', ic:'🟪'},
+];
+const TOPICS_BY_SUBJECT = {
+  math:['שברים','משוואות','גיאומטריה','טריגונומטריה','פונקציות','סטטיסטיקה'],
+  english:['Grammar','Vocabulary','Reading','Writing','Tenses'],
+  hebrew:['הבנת הנקרא','ניתוח שירה','כתיבה יצירתית'],
+  science:['תאים','אנרגיה','מערכת השמש','אקולוגיה'],
+  default:['יסודות','נושא מתקדם','חזרה כללית']
+};
+function topicsFor(subjId){ return TOPICS_BY_SUBJECT[subjId] || TOPICS_BY_SUBJECT.default; }
+
+const AVATAR_EMOJIS = ['🦊','🐼','🐧','🦁','🐱','🐰','🐸','🦄','🐯','🐨','🦉','🐙'];
+const AVATAR_COLORS = ['#2a2f5c','#5c2a4a','#2a5c4f','#5c4a2a','#3a2a5c','#5c2a2a'];
+const SHOP_ITEMS = [
+  {id:'frame_gold', name:'מסגרת זהב', ic:'🟡', price:50},
+  {id:'frame_fire', name:'מסגרת אש', ic:'🔥', price:80},
+  {id:'bg_space', name:'רקע חלל', ic:'🌌', price:60},
+  {id:'pet_dragon', name:'חיית מחמד: דרקון', ic:'🐉', price:120},
+  {id:'hat_wizard', name:'כובע קוסם', ic:'🧙', price:40},
+  {id:'glasses', name:'משקפי חנון', ic:'🤓', price:30},
+];
+const BADGES = [
+  {id:'first_lesson', name:'הצעד הראשון', desc:'סיימת שיעור ראשון', cond:s=>s.stats.totalPractices>=1, ic:'🥇'},
+  {id:'streak3', name:'רצף של 3', desc:'3 ימי למידה ברצף', cond:s=>s.streak>=3, ic:'🔥'},
+  {id:'streak7', name:'שבוע שלם', desc:'7 ימי למידה ברצף', cond:s=>s.streak>=7, ic:'🏅'},
+  {id:'xp100', name:'אלוף ה-XP', desc:'צברת 100 נקודות נסיון', cond:s=>s.xp>=100, ic:'⭐'},
+  {id:'xp500', name:'מאסטר למידה', desc:'צברת 500 נקודות נסיון', cond:s=>s.xp>=500, ic:'🌟'},
+  {id:'quiz5', name:'עבר את המבחן', desc:'סיימת 5 מבחנים', cond:s=>s.stats.quizzesTaken>=5, ic:'📝'},
+  {id:'perfect', name:'ציון מושלם', desc:'100% במבחן', cond:s=>s.stats.hadPerfectQuiz, ic:'💯'},
+  {id:'coins200', name:'עשיר קטן', desc:'צברת 200 מטבעות', cond:s=>s.coinsEarnedTotal>=200, ic:'💰'},
+];
+const DAILY_TIPS = [
+  'הפסקה של 5 דקות כל 25 דקות למידה משפרת ריכוז (שיטת פומודורו).',
+  'חזרה על חומר אחרי יום, שבוע וחודש מעבירה אותו לזיכרון לטווח ארוך.',
+  'הסבר את מה שלמדת בקול רם למישהו אחר — זו הדרך הכי טובה לוודא שהבנת.',
+  'שינה טובה לפני מבחן חשובה יותר מלמידה עד השעות הקטנות.',
+  'נסה/י לפתור תרגיל לפני שמסתכלים על הפתרון — זה מחזק את הזיכרון.',
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = null;
+function defaultState(){
+  return {
+    profile:{name:'', age:'', grade:'', lang:'he', country:'', curriculum:'', avatar:'🦊', avatarColor:'#2a2f5c'},
+    level:1, xp:0, coins:20, streak:0, lastActiveDate:null,
+    dailyGoal:30, todayMinutes:0, todayDate:null,
+    blockGames:false,
+    owned:[], parentMessages:[],
+    mistakes:[], // {id,subject,topic,question,options,correct,explanation,date}
+    achievementsUnlocked:[],
+    coinsEarnedTotal:0,
+    stats:{ totalPractices:0, quizzesTaken:0, hadPerfectQuiz:false,
+      subjectProgress:{}, // subj: {correct,total}
+      dailyMinutes:{} // 'YYYY-MM-DD': minutes
+    },
+    dailyMissions:null, dailyMissionsDate:null,
+    classCode:null, students:[], homework:[],
+    darkMode:true
+  };
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem('aiTeacherState');
+    state = raw ? JSON.parse(raw) : defaultState();
+  }catch(e){ state = defaultState(); }
+  if(!state.stats) state = defaultState();
+}
+function saveState(){ localStorage.setItem('aiTeacherState', JSON.stringify(state)); }
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.nav===name));
+  window.scrollTo(0,0);
+  if(name==='home') renderHome();
+  if(name==='subjects') renderSubjects();
+  if(name==='achievements') renderAchievements();
+  if(name==='avatar') renderAvatarScreen();
+  if(name==='shop') renderShop();
+  if(name==='mistakes') renderMistakes();
+  if(name==='statistics') renderStatistics();
+  if(name==='parent-dash') renderParentDash();
+  if(name==='teacher-dash') renderTeacherDash();
+  if(name==='quiz-setup') renderQuizSetup();
+  if(name==='settings') renderApiKeyStatus();
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   AUTH / ONBOARDING
+========================================================= */
+function fakeLogin(provider){
+  showToast('מתחבר עם '+provider+'... ✅');
+  setTimeout(()=>{
+    if(state.profile.name){ showScreen('home'); }
+    else { showScreen('onboard'); renderEmojiPicker('ob-emoji-picker','ob-avatar-preview'); }
+  }, 500);
+}
+function goGuest(){
+  state.profile.name = 'אורח/ת';
+  saveState();
+  showScreen('onboard');
+  renderEmojiPicker('ob-emoji-picker','ob-avatar-preview');
+}
+function obNext(step){
+  if(step===2){
+    state.profile.name = document.getElementById('ob-name').value || 'תלמיד/ה';
+    state.profile.age = document.getElementById('ob-age').value;
+    state.profile.grade = document.getElementById('ob-grade').value;
+  }
+  if(step===3){
+    state.profile.lang = document.getElementById('ob-lang').value;
+    state.profile.country = document.getElementById('ob-country').value;
+    state.profile.curriculum = document.getElementById('ob-curriculum').value;
+  }
+  ['1','2','3'].forEach(n=>{
+    document.getElementById('ob-step'+n).classList.toggle('hidden', n!=String(step));
+    document.getElementById('dot'+n).classList.toggle('on', n<=String(step));
+  });
+}
+function renderEmojiPicker(pickerId, previewId){
+  const wrap = document.getElementById(pickerId);
+  wrap.innerHTML = AVATAR_EMOJIS.map(e=>`<button class="emoji-opt ${e===state.profile.avatar?'sel':''}" onclick="pickEmoji('${e}','${pickerId}','${previewId}')">${e}</button>`).join('');
+  document.getElementById(previewId).textContent = state.profile.avatar;
+}
+function pickEmoji(e, pickerId, previewId){
+  state.profile.avatar = e;
+  document.getElementById(previewId).textContent = e;
+  document.querySelectorAll('#'+pickerId+' .emoji-opt').forEach(b=>b.classList.toggle('sel', b.textContent===e));
+}
+function finishOnboarding(){
+  saveState();
+  showScreen('home');
+  showToast('ברוך/ה הבא/ה, '+state.profile.name+'! 🎉');
+}
+function logout(){
+  if(confirm('להתנתק? ההתקדמות תישמר במכשיר זה.')){
+    state = defaultState(); saveState(); showScreen('splash');
+  }
+}
+function resetProgress(){
+  if(confirm('לאפס את כל ההתקדמות? פעולה זו אינה הפיכה.')){
+    const name=state.profile.name, avatar=state.profile.avatar;
+    state = defaultState(); state.profile.name=name; state.profile.avatar=avatar;
+    saveState(); showScreen('home'); showToast('ההתקדמות אופסה');
+  }
+}
+
+/* =========================================================
+   DAILY / STREAK LOGIC
+========================================================= */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function ensureDailyReset(){
+  const t = todayStr();
+  if(state.todayDate !== t){
+    // handle streak
+    if(state.lastActiveDate){
+      const diff = (new Date(t) - new Date(state.lastActiveDate))/86400000;
+      if(diff > 1) state.streak = 0;
+    }
+    state.todayDate = t;
+    state.todayMinutes = 0;
+  }
+  if(state.dailyMissionsDate !== t){
+    state.dailyMissions = [
+      {text:'תרגל/י 5 שאלות', target:5, progress:0, xp:15, key:'practice5'},
+      {text:'למד/י נושא חדש', target:1, progress:0, xp:10, key:'newTopic'},
+      {text:'סיים/י מבחן אחד', target:1, progress:0, xp:20, key:'quiz1'},
+    ];
+    state.dailyMissionsDate = t;
+  }
+  saveState();
+}
+function markActivity(minutes){
+  ensureDailyReset();
+  const t = todayStr();
+  if(state.lastActiveDate !== t){
+    state.streak += 1;
+    state.lastActiveDate = t;
+  }
+  state.todayMinutes += minutes;
+  state.stats.dailyMinutes[t] = (state.stats.dailyMinutes[t]||0) + minutes;
+  saveState();
+}
+function progressMission(key, amount=1){
+  ensureDailyReset();
+  const m = state.dailyMissions.find(x=>x.key===key);
+  if(m && m.progress < m.target){
+    m.progress = Math.min(m.target, m.progress+amount);
+    if(m.progress>=m.target){ addXP(m.xp); addCoins(5); showToast('משימה יומית הושלמה! +'+m.xp+' XP'); }
+    saveState();
+  }
+}
+
+/* =========================================================
+   XP / LEVEL / COINS
+========================================================= */
+function xpForLevel(lvl){ return lvl*80; }
+function addXP(amount){
+  state.xp += amount;
+  while(state.xp >= xpForLevel(state.level)){
+    state.xp -= xpForLevel(state.level);
+    state.level += 1;
+    showToast('🎉 עלית לרמה '+state.level+'!');
+  }
+  checkAchievements();
+  saveState();
+}
+function addCoins(amount){ state.coins += amount; state.coinsEarnedTotal += amount; saveState(); }
+function checkAchievements(){
+  BADGES.forEach(b=>{
+    if(!state.achievementsUnlocked.includes(b.id) && b.cond(state)){
+      state.achievementsUnlocked.push(b.id);
+      showToast('🏆 הישג חדש: '+b.name);
+    }
+  });
+  saveState();
+}
+
+/* =========================================================
+   HOME RENDER
+========================================================= */
+function renderHome(){
+  ensureDailyReset();
+  document.getElementById('home-greet').textContent = 'שלום, '+(state.profile.name||'תלמיד/ה')+' 👋';
+  document.getElementById('home-avatar').textContent = state.profile.avatar;
+  document.getElementById('home-avatar').style.background = state.profile.avatarColor;
+  document.getElementById('home-level').textContent = state.level;
+  document.getElementById('home-streak').textContent = state.streak;
+  document.getElementById('home-coins').textContent = state.coins;
+  document.getElementById('home-xp').textContent = state.xp;
+
+  const pct = Math.min(100, Math.round((state.todayMinutes/state.dailyGoal)*100));
+  document.getElementById('goal-txt').textContent = pct+'%';
+  const circumference = 188;
+  document.getElementById('goal-ring').setAttribute('stroke-dashoffset', circumference - (circumference*pct/100));
+
+  const missionsWrap = document.getElementById('daily-missions');
+  missionsWrap.innerHTML = state.dailyMissions.map(m=>`
+    <div class="mission-item">
+      <div class="mission-check ${m.progress>=m.target?'done':''}">${m.progress>=m.target?'✓':''}</div>
+      <div class="mtext">${m.text} (${m.progress}/${m.target})</div>
+      <div class="mxp">+${m.xp} XP</div>
+    </div>`).join('');
+
+  document.getElementById('daily-tip').textContent = '💡 ' + DAILY_TIPS[new Date().getDate()%DAILY_TIPS.length];
+
+  drawWeekChart('week-chart');
+}
+function drawWeekChart(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio||1;
+  const w = canvas.clientWidth||300, h = 110;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  const days = [];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const vals = days.map(d=>state.stats.dailyMinutes[d]||0);
+  const max = Math.max(10, ...vals);
+  const barW = w/7 - 10;
+  const styles = getComputedStyle(document.body);
+  ctx.font = '10px Assistant';
+  days.forEach((d,i)=>{
+    const x = i*(w/7) + 8;
+    const barH = (vals[i]/max) * (h-28);
+    const grad = ctx.createLinearGradient(0,h-28-barH,0,h-28);
+    grad.addColorStop(0, styles.getPropertyValue('--gold'));
+    grad.addColorStop(1, styles.getPropertyValue('--coral'));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x, h-28-barH, barW, barH, 5) : ctx.rect(x,h-28-barH,barW,barH);
+    ctx.fill();
+    ctx.fillStyle = styles.getPropertyValue('--text-dim');
+    const lbl = ['א','ב','ג','ד','ה','ו','ש'][new Date(d).getDay()];
+    ctx.fillText(lbl, x+barW/2-3, h-10);
+  });
+}
+
+/* =========================================================
+   SUBJECTS
+========================================================= */
+let currentSubject = null;
+function renderSubjects(){
+  const q = (document.getElementById('subject-search').value||'').trim();
+  const grid = document.getElementById('subjects-grid');
+  const filtered = SUBJECTS.filter(s=>s.name.includes(q));
+  grid.innerHTML = filtered.map(s=>{
+    const prog = state.stats.subjectProgress[s.id];
+    const pct = prog && prog.total ? Math.round(100*prog.correct/prog.total) : 0;
+    return `<button class="subject-tile" onclick="openSubject('${s.id}')">
+      <span class="ic3">${s.ic}</span><span class="sname">${s.name}</span>
+      <div class="sprog"><i style="width:${pct}%"></i></div>
+    </button>`;
+  }).join('');
+}
+function openSubject(id){
+  currentSubject = SUBJECTS.find(s=>s.id===id);
+  document.getElementById('topics-title').textContent = currentSubject.ic+' '+currentSubject.name;
+  const list = document.getElementById('topics-list');
+  const topics = topicsFor(id);
+  currentTopic = topics[0];
+  list.innerHTML = topics.map((t,i)=>`<button class="diff-tab ${i===0?'sel':''}" onclick="selectTopic('${t}',this)">${t}</button>`).join('');
+  progressMission('newTopic',1);
+  showScreen('topics');
+}
+let currentTopic = null;
+function selectTopic(t, el){
+  currentTopic = t;
+  document.querySelectorAll('#topics-list .diff-tab').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function openQuizSetupFromTopic(){
+  showScreen('quiz-setup');
+  document.getElementById('quiz-subject').value = currentSubject.id;
+}
+
+/* =========================================================
+   AI API HELPERS
+========================================================= */
+// שלוש דרכים אפשריות לקרוא ל-AI, לפי סדר עדיפות:
+// 1) WORKER_URL מוגדר (לא REPLACE-ME) -> קורא לפרוקסי שלך (הכי בטוח, לפריסה אמיתית)
+// 2) יש מפתח API אישי שמור ב-localStorage (הגדרות -> מפתח API לבדיקות) -> קריאה ישירה
+//    עם anthropic-dangerous-direct-browser-access. טוב לבדיקות על המחשב שלך בלבד.
+// 3) אחרת -> ניסיון קריאה ישירה בלי מפתח, שיעבוד רק בתוך תצוגת Artifact חיה של Claude.ai
+const WORKER_URL = "https://REPLACE-ME.workers.dev";
+
+async function callClaude(messages, system){
+  const body = { model:'claude-sonnet-4-6', max_tokens:1000, messages };
+  if(system) body.system = system;
+
+  const useWorker = WORKER_URL && !WORKER_URL.includes('REPLACE-ME');
+  const userKey = localStorage.getItem('aiTeacherApiKey');
+  const endpoint = useWorker ? WORKER_URL : 'https://api.anthropic.com/v1/messages';
+  const headers = {'Content-Type':'application/json'};
+  if(!useWorker && userKey){
+    headers['x-api-key'] = userKey;
+    headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  }
+
+  let resp;
+  try{
+    resp = await fetch(endpoint, { method:'POST', headers, body:JSON.stringify(body) });
+  }catch(networkErr){
+    if(!useWorker && !userKey){
+      throw new Error('אין חיבור ל-AI: זה קובץ מקומי בלי פרוקסי ובלי מפתח API. הוסף מפתח בהגדרות (לבדיקות) או הגדר Worker.');
+    }
+    throw new Error('כשל בחיבור לשרת ה-AI (בדוק אינטרנט / מפתח / CORS).');
+  }
+  let data;
+  try{ data = await resp.json(); }catch(e){ throw new Error('תגובה לא תקינה מהשרת (סטטוס '+resp.status+').'); }
+  if(!resp.ok || data.error){
+    throw new Error((data.error && data.error.message) || ('שגיאת שרת (סטטוס '+resp.status+')'));
+  }
+  const text = (data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
+  return text;
+}
+function extractJSON(text){
+  const clean = text.replace(/```json/g,'').replace(/```/g,'').trim();
+  const start = clean.indexOf('{'); const end = clean.lastIndexOf('}');
+  return JSON.parse(clean.slice(start, end+1));
+}
+
+/* =========================================================
+   AI CHAT
+========================================================= */
+let chatHistory = [];
+function openChat(){
+  showScreen('chat');
+  if(chatHistory.length===0){
+    const subj = currentSubject ? ' בנושא '+currentSubject.name : '';
+    pushMsg('ai', 'היי '+(state.profile.name||'')+'! אני המורה הפרטי שלך 🤖'+subj+'. על מה תרצה/י ללמוד היום?');
+  }
+}
+function pushMsg(role, text){
+  chatHistory.push({role, text});
+  const log = document.getElementById('chat-log');
+  const div = document.createElement('div');
+  div.className = 'msg '+(role==='ai'?'ai':'user');
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  window.scrollTo(0, document.body.scrollHeight);
+}
+function quickPrompt(p){
+  document.getElementById('chat-input').value = p;
+  sendChat();
+}
+async function sendChat(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  pushMsg('user', text);
+  input.value = '';
+  const log = document.getElementById('chat-log');
+  const typing = document.createElement('div');
+  typing.className = 'msg ai typing-dots'; typing.innerHTML = '<span></span><span></span><span></span>';
+  log.appendChild(typing); log.scrollTop = log.scrollHeight;
+  try{
+    const apiMsgs = chatHistory.slice(-10).map(m=>({role: m.role==='ai'?'assistant':'user', content:m.text}));
+    const sys = 'אתה מורה פרטי סבלני ומעודד לתלמיד/ה בגיל '+(state.profile.age||'לא ידוע')+', כיתה '+(state.profile.grade||'')+'. ענה בעברית פשוטה וברורה, בקצרה יחסית (עד כמה פסקאות), עם דוגמאות כשמתאים. אם המשתמש מבקש הסבר לילד קטן - השתמש באנלוגיות פשוטות מהחיים. היה חם ומעודד.';
+    const reply = await callClaude(apiMsgs, sys);
+    typing.remove();
+    pushMsg('ai', reply || 'סליחה, לא הצלחתי לענות כרגע. נסה/י שוב.');
+    markActivity(1);
+  }catch(e){
+    typing.remove();
+    pushMsg('ai', '⚠️ ' + (e.message || 'אירעה שגיאה בחיבור. נסה/י שוב בעוד רגע.'));
+  }
+}
+
+/* =========================================================
+   PRACTICE
+========================================================= */
+let practiceState = {question:null, answered:false};
+async function startPractice(){
+  showScreen('practice');
+  await loadPracticeQuestion();
+}
+async function loadPracticeQuestion(){
+  const area = document.getElementById('practice-area');
+  area.innerHTML = `<div class="loader"><div class="spin-ic"></div>מכין שאלה חדשה...</div>`;
+  try{
+    const q = await generateQuestion(currentSubject?.name||'כללי', currentTopic||'יסודות', 'בינוני');
+    practiceState = {question:q, answered:false};
+    renderQuestion(area, q, false);
+  }catch(e){
+    area.innerHTML = `
+      <div class="card" style="border-color:var(--coral);">
+        <b style="color:var(--coral);">⚠️ לא הצלחתי לטעון שאלה מה-AI</b>
+        <p style="font-size:12.5px; color:var(--text-dim); margin:10px 0;">${e.message}</p>
+        <button class="btn btn-teal btn-block" onclick="loadPracticeQuestion()">נסה שוב</button>
+      </div>`;
+  }
+}
+async function generateQuestion(subject, topic, difficulty){
+  const sys = 'אתה מחולל שאלות לימודיות. החזר אך ורק אובייקט JSON תקני (ללא טקסט נוסף, ללא Markdown) במבנה: {"question":"טקסט השאלה בעברית","type":"multiple_choice או true_false","options":["אפשרות1","אפשרות2","אפשרות3","אפשרות4"],"correctIndex":0,"explanation":"הסבר קצר בעברית מדוע זו התשובה הנכונה"}. עבור true_false האפשרויות יהיו בדיוק ["נכון","לא נכון"].';
+  const userMsg = 'צור שאלה במקצוע: '+subject+', נושא: '+topic+', רמת קושי: '+difficulty+'. חשוב: JSON בלבד.';
+  const text = await callClaude([{role:'user', content:userMsg}], sys);
+  return extractJSON(text);
+}
+function renderQuestion(container, q, isQuiz, meta){
+  container.innerHTML = `
+    <div class="q-card">
+      ${meta||''}
+      <div class="q-text">${q.question}</div>
+      <div id="opts-wrap">
+        ${q.options.map((o,i)=>`<button class="opt-btn" data-i="${i}" onclick="selectAnswer(${i}, ${isQuiz})">${o}</button>`).join('')}
+      </div>
+      <div class="explain-box" id="explain-box">${q.explanation||''}</div>
+    </div>
+    ${!isQuiz? `<button class="btn btn-teal btn-block hidden" id="next-q-btn" onclick="loadPracticeQuestion()">שאלה הבאה ➡️</button>`:''}
+  `;
+}
+function selectAnswer(i, isQuiz){
+  if(isQuiz) return selectQuizAnswer(i);
+  if(practiceState.answered) return;
+  practiceState.answered = true;
+  const q = practiceState.question;
+  document.querySelectorAll('#opts-wrap .opt-btn').forEach((b,idx)=>{
+    b.classList.add('disabled');
+    if(idx===q.correctIndex) b.classList.add('correct');
+    else if(idx===i) b.classList.add('wrong');
+  });
+  document.getElementById('explain-box').classList.add('show');
+  const correct = i===q.correctIndex;
+  updateSubjectProgress(currentSubject?.id||'general', correct);
+  if(correct){ addXP(5); addCoins(1); showToast('נכון מאוד! +5 XP'); }
+  else{
+    saveMistake(q);
+    showToast('לא נורא, ממשיכים ללמוד 💪');
+  }
+  state.stats.totalPractices += 1;
+  progressMission('practice5', 1);
+  markActivity(1);
+  checkAchievements();
+  saveState();
+  const nb = document.getElementById('next-q-btn'); if(nb) nb.classList.remove('hidden');
+}
+function updateSubjectProgress(subjId, correct){
+  if(!state.stats.subjectProgress[subjId]) state.stats.subjectProgress[subjId] = {correct:0,total:0};
+  state.stats.subjectProgress[subjId].total += 1;
+  if(correct) state.stats.subjectProgress[subjId].correct += 1;
+}
+function saveMistake(q){
+  state.mistakes.unshift({
+    id:'m'+Date.now(), subject:currentSubject?.name||'כללי', topic:currentTopic||'',
+    question:q.question, options:q.options, correctIndex:q.correctIndex, explanation:q.explanation,
+    date:new Date().toLocaleDateString('he-IL')
+  });
+  state.mistakes = state.mistakes.slice(0,60);
+  saveState();
+}
+
+/* =========================================================
+   QUIZ
+========================================================= */
+function renderQuizSetup(){
+  const sel = document.getElementById('quiz-subject');
+  sel.innerHTML = SUBJECTS.map(s=>`<option value="${s.id}">${s.ic} ${s.name}</option>`).join('');
+  if(currentSubject) sel.value = currentSubject.id;
+}
+let quizState = {questions:[], idx:0, correct:0, timer:null, timeLeft:0, answers:[]};
+async function startQuiz(){
+  const subjId = document.getElementById('quiz-subject').value;
+  const subj = SUBJECTS.find(s=>s.id===subjId);
+  const diff = document.getElementById('quiz-diff').value;
+  const count = parseInt(document.getElementById('quiz-count').value);
+  const timePerQ = parseInt(document.getElementById('quiz-time').value);
+  showScreen('quiz');
+  document.getElementById('quiz-area').innerHTML = `<div class="loader"><div class="spin-ic"></div>בונה מבחן מותאם אישית (${count} שאלות)...</div>`;
+  const questions = [];
+  try{
+    for(let i=0;i<count;i++){
+      const q = await generateQuestion(subj.name, topicsFor(subjId)[i % topicsFor(subjId).length], diff);
+      questions.push(q);
+    }
+  }catch(e){
+    document.getElementById('quiz-area').innerHTML = `
+      <div class="card" style="border-color:var(--coral);">
+        <b style="color:var(--coral);">⚠️ לא הצלחתי לבנות את המבחן</b>
+        <p style="font-size:12.5px; color:var(--text-dim); margin:10px 0;">${e.message}</p>
+        <button class="btn btn-teal btn-block" onclick="showScreen('quiz-setup')">חזרה להגדרות המבחן</button>
+      </div>`;
+    return;
+  }
+  quizState = {questions, idx:0, correct:0, timePerQ, timeLeft:timePerQ, answers:[], subj};
+  showQuizQuestion();
+}
+function showQuizQuestion(){
+  const {questions, idx} = quizState;
+  const q = questions[idx];
+  document.getElementById('quiz-progress-txt').textContent = `שאלה ${idx+1} מתוך ${questions.length}`;
+  document.getElementById('quiz-progress-bar').style.width = Math.round((idx/questions.length)*100)+'%';
+  renderQuestion(document.getElementById('quiz-area'), q, true);
+  document.getElementById('explain-box') && (document.getElementById('explain-box').classList.remove('show'));
+  clearInterval(quizState.timer);
+  if(quizState.timePerQ>0){
+    quizState.timeLeft = quizState.timePerQ;
+    document.getElementById('quiz-timer').textContent = quizState.timeLeft+'s';
+    quizState.timer = setInterval(()=>{
+      quizState.timeLeft--;
+      document.getElementById('quiz-timer').textContent = quizState.timeLeft+'s';
+      if(quizState.timeLeft<=0){ clearInterval(quizState.timer); selectQuizAnswer(-1); }
+    },1000);
+  } else {
+    document.getElementById('quiz-timer').textContent = '∞';
+  }
+}
+function selectQuizAnswer(i){
+  clearInterval(quizState.timer);
+  const q = quizState.questions[quizState.idx];
+  const correct = i===q.correctIndex;
+  quizState.answers.push({q, chosen:i, correct});
+  if(correct) quizState.correct++;
+  document.querySelectorAll('#opts-wrap .opt-btn').forEach((b,idx2)=>{
+    b.classList.add('disabled');
+    if(idx2===q.correctIndex) b.classList.add('correct');
+    else if(idx2===i) b.classList.add('wrong');
+  });
+  document.getElementById('explain-box').classList.add('show');
+  updateSubjectProgress(quizState.subj.id, correct);
+  if(!correct) saveMistake(q);
+  setTimeout(()=>{
+    quizState.idx++;
+    if(quizState.idx < quizState.questions.length) showQuizQuestion();
+    else finishQuiz();
+  }, 1400);
+}
+function confirmExitQuiz(){
+  if(confirm('לצאת מהמבחן? ההתקדמות במבחן זה תאבד.')){
+    clearInterval(quizState.timer);
+    showScreen('home');
+  }
+}
+function finishQuiz(){
+  const total = quizState.questions.length;
+  const pct = Math.round((quizState.correct/total)*100);
+  const xpGain = quizState.correct*10 + (pct===100?20:0);
+  addXP(xpGain); addCoins(Math.round(xpGain/2));
+  state.stats.quizzesTaken += 1;
+  if(pct===100) state.stats.hadPerfectQuiz = true;
+  progressMission('quiz1',1);
+  markActivity(Math.round(total*0.5));
+  checkAchievements();
+  saveState();
+
+  document.getElementById('qr-score').textContent = pct+'%';
+  document.getElementById('qr-sub').textContent = quizState.subj.name+' • '+total+' שאלות';
+  document.getElementById('qr-correct').textContent = quizState.correct+'/'+total;
+  document.getElementById('qr-xp').textContent = '+'+xpGain;
+  document.getElementById('qr-review').innerHTML = quizState.answers.map((a,i)=>`
+    <div class="mistake-card" style="border-inline-start-color:${a.correct?'var(--teal)':'var(--coral)'}">
+      <div style="font-size:13px; font-weight:700; margin-bottom:4px;">${i+1}. ${a.q.question}</div>
+      <div style="font-size:12px; color:var(--text-dim);">${a.correct?'✅ נכון':'❌ טעות — התשובה הנכונה: '+a.q.options[a.q.correctIndex]}</div>
+    </div>`).join('');
+  showScreen('quiz-results');
+}
+
+/* =========================================================
+   MISTAKES
+========================================================= */
+function renderMistakes(){
+  const wrap = document.getElementById('mistakes-list');
+  if(state.mistakes.length===0){
+    wrap.innerHTML = `<div class="card" style="text-align:center; color:var(--text-dim);">אין טעויות שמורות כרגע — כל הכבוד! 🎉</div>`;
+    return;
+  }
+  wrap.innerHTML = state.mistakes.map(m=>`
+    <div class="mistake-card">
+      <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">${m.subject} • ${m.topic} • ${m.date}</div>
+      <div style="font-weight:700; font-size:13.5px; margin-bottom:6px;">${m.question}</div>
+      <div style="font-size:12px; color:var(--teal); margin-bottom:8px;">תשובה נכונה: ${m.options[m.correctIndex]}</div>
+      <button class="btn btn-ghost" style="font-size:12px; padding:8px 12px;" onclick="retryMistake('${m.id}')">🔁 תרגל/י שאלה דומה</button>
+    </div>`).join('');
+}
+async function retryMistake(id){
+  const m = state.mistakes.find(x=>x.id===id);
+  if(!m) return;
+  currentSubject = SUBJECTS.find(s=>s.name===m.subject) || currentSubject;
+  currentTopic = m.topic;
+  showScreen('practice');
+  await loadPracticeQuestion();
+}
+
+/* =========================================================
+   ACHIEVEMENTS
+========================================================= */
+function renderAchievements(){
+  const wrap = document.getElementById('achievements-list');
+  wrap.innerHTML = BADGES.map(b=>{
+    const unlocked = state.achievementsUnlocked.includes(b.id);
+    return `<div class="badge-card ${unlocked?'unlocked':'locked'}">
+      <div class="badge-ic">${b.ic}</div>
+      <div><div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   AVATAR / SHOP
+========================================================= */
+function renderAvatarScreen(){
+  document.getElementById('av-preview').textContent = state.profile.avatar;
+  document.getElementById('av-preview').style.background = state.profile.avatarColor;
+  document.getElementById('av-emoji-picker').innerHTML = AVATAR_EMOJIS.map(e=>
+    `<button class="emoji-opt ${e===state.profile.avatar?'sel':''}" onclick="setAvatarEmoji('${e}')">${e}</button>`).join('');
+  document.getElementById('av-color-picker').innerHTML = AVATAR_COLORS.map(c=>
+    `<button class="color-dot ${c===state.profile.avatarColor?'sel':''}" style="background:${c}" onclick="setAvatarColor('${c}')"></button>`).join('');
+}
+function setAvatarEmoji(e){
+  state.profile.avatar = e;
+  document.getElementById('av-preview').textContent = e;
+  document.querySelectorAll('#av-emoji-picker .emoji-opt').forEach(b=>b.classList.toggle('sel', b.textContent===e));
+}
+function setAvatarColor(c){
+  state.profile.avatarColor = c;
+  document.getElementById('av-preview').style.background = c;
+  document.querySelectorAll('#av-color-picker .color-dot').forEach(b=>b.classList.toggle('sel', b.style.background===hexToRgbStr(c)));
+}
+function hexToRgbStr(hex){
+  const d=document.createElement('div'); d.style.background=hex; document.body.appendChild(d);
+  const rgb=getComputedStyle(d).backgroundColor; document.body.removeChild(d); return rgb;
+}
+function saveAvatar(){ saveState(); showToast('האווטאר נשמר! ✅'); showScreen('settings'); }
+
+function renderShop(){
+  document.getElementById('shop-coins').textContent = state.coins;
+  document.getElementById('shop-list').innerHTML = SHOP_ITEMS.map(it=>{
+    const owned = state.owned.includes(it.id);
+    return `<div class="shop-item">
+      <div class="sic">${it.ic}</div>
+      <div class="sinfo"><div class="sname2">${it.name}</div><div style="font-size:11px; color:var(--text-dim);">🪙 ${it.price}</div></div>
+      <button class="buy-btn" ${owned?'disabled':''} onclick="buyItem('${it.id}')">${owned?'נרכש ✓':'קנה'}</button>
+    </div>`;
+  }).join('');
+}
+function buyItem(id){
+  const item = SHOP_ITEMS.find(i=>i.id===id);
+  if(state.coins < item.price){ showToast('אין מספיק מטבעות 😕'); return; }
+  state.coins -= item.price;
+  state.owned.push(id);
+  saveState();
+  showToast('נרכש: '+item.name+' 🎉');
+  renderShop();
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+function toggleDark(){
+  state.darkMode = !state.darkMode;
+  document.body.classList.toggle('light', !state.darkMode);
+  document.getElementById('dark-toggle').classList.toggle('on', state.darkMode);
+  saveState();
+}
+function changeLang(l){ state.profile.lang = l; saveState(); showToast(l==='he'?'עברית נבחרה':'English selected'); }
+function saveApiKey(){
+  const v = document.getElementById('api-key-input').value.trim();
+  if(!v){ showToast('הדבק מפתח קודם'); return; }
+  localStorage.setItem('aiTeacherApiKey', v);
+  document.getElementById('api-key-input').value = '';
+  renderApiKeyStatus();
+  showToast('המפתח נשמר בדפדפן הזה ✅');
+}
+function clearApiKey(){
+  localStorage.removeItem('aiTeacherApiKey');
+  renderApiKeyStatus();
+  showToast('המפתח נמחק');
+}
+function renderApiKeyStatus(){
+  const has = !!localStorage.getItem('aiTeacherApiKey');
+  const el = document.getElementById('api-key-status');
+  if(el) el.textContent = has ? '✅ מפתח שמור במכשיר זה' : '⚠️ אין מפתח שמור — ה-AI לא יעבוד מחוץ ל-Claude.ai';
+}
+function setDailyGoal(v){
+  state.dailyGoal = parseInt(v);
+  document.getElementById('settings-goal') && (document.getElementById('settings-goal').value = v);
+  document.getElementById('pd-goal') && (document.getElementById('pd-goal').value = v);
+  saveState(); showToast('יעד יומי עודכן ל-'+v+' דקות');
+}
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+function renderStatistics(){
+  drawWeekChart('stats-week-chart');
+  const wrap = document.getElementById('stats-subjects');
+  const entries = Object.entries(state.stats.subjectProgress);
+  if(entries.length===0){
+    wrap.innerHTML = `<div class="card" style="color:var(--text-dim); text-align:center;">עדיין אין מספיק נתונים — תתחיל/י לתרגל!</div>`;
+  } else {
+    wrap.innerHTML = entries.map(([id,p])=>{
+      const s = SUBJECTS.find(x=>x.id===id);
+      const pct = Math.round(100*p.correct/p.total);
+      return `<div class="card" style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px; font-weight:700;">
+          <span>${s?s.ic+' '+s.name:id}</span><span>${pct}%</span>
+        </div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${pct}%; background:${pct>=70?'linear-gradient(90deg,var(--teal),#1a9c8c)':'linear-gradient(90deg,var(--coral),#c94b4b)'}"></div></div>
+      </div>`;
+    }).join('');
+  }
+  const avg = entries.length ? Math.round(entries.reduce((a,[,p])=>a+ (p.correct/p.total),0)/entries.length*100) : 0;
+  document.getElementById('stats-forecast').innerHTML = avg>0
+    ? `לפי קצב ההתקדמות הנוכחי, רמת ההצלחה הממוצעת שלך היא כ-${avg}%. המשך/י כך כדי לשפר עוד! 📈`
+    : `תרגל/י כמה שאלות כדי לקבל תחזית מותאמת אישית.`;
+}
+
+/* =========================================================
+   PARENT DASHBOARD
+========================================================= */
+function renderParentDash(){
+  document.getElementById('pd-today').textContent = state.todayMinutes+' דק\'';
+  document.getElementById('pd-streak').textContent = state.streak;
+  document.getElementById('pd-level').textContent = state.level;
+  const entries = Object.entries(state.stats.subjectProgress);
+  const avg = entries.length ? Math.round(entries.reduce((a,[,p])=>a+(p.correct/p.total),0)/entries.length*100) : 0;
+  document.getElementById('pd-avg').textContent = avg+'%';
+  const weak = entries.filter(([,p])=>p.total>=2 && p.correct/p.total<0.6).map(([id])=>SUBJECTS.find(s=>s.id===id)).filter(Boolean);
+  document.getElementById('pd-weak').innerHTML = weak.length
+    ? weak.map(s=>`<span class="pill" style="margin:3px;">${s.ic} ${s.name}</span>`).join('')
+    : `<span style="color:var(--text-dim); font-size:13px;">אין עדיין נושאים חלשים מזוהים 🙂</span>`;
+  document.getElementById('pd-goal').value = state.dailyGoal;
+  document.getElementById('pd-block-toggle').classList.toggle('on', state.blockGames);
+}
+function toggleBlockGames(){
+  state.blockGames = !state.blockGames;
+  document.getElementById('pd-block-toggle').classList.toggle('on', state.blockGames);
+  saveState();
+  showToast(state.blockGames?'משחקים נחסמו':'משחקים נפתחו');
+}
+function sendParentMessage(){
+  const val = document.getElementById('pd-msg').value.trim();
+  if(!val) return;
+  state.parentMessages.unshift({text:val, date:new Date().toLocaleString('he-IL')});
+  saveState();
+  document.getElementById('pd-msg').value = '';
+  showToast('ההודעה נשלחה לתלמיד/ה 📩');
+}
+
+/* =========================================================
+   TEACHER DASHBOARD
+========================================================= */
+function renderTeacherDash(){
+  document.getElementById('class-code').textContent = state.classCode || '—';
+  document.getElementById('teacher-students').innerHTML = state.students.length
+    ? state.students.map(s=>`<div class="stat-block"><span>${s}</span><span class="pill">פעיל</span></div>`).join('')
+    : `<span style="color:var(--text-dim); font-size:13px;">אין עדיין תלמידים רשומים בכיתה</span>`;
+}
+function generateClassCode(){
+  state.classCode = 'C-' + Math.random().toString(36).slice(2,7).toUpperCase();
+  state.students = ['נועה כהן','איתי לוי','שירה בן־דוד'];
+  saveState();
+  renderTeacherDash();
+  showToast('כיתה נוצרה: '+state.classCode);
+}
+function assignHomework(){
+  const v = document.getElementById('hw-text').value.trim();
+  if(!v) return;
+  state.homework.unshift({text:v, date:new Date().toLocaleDateString('he-IL')});
+  saveState();
+  document.getElementById('hw-text').value = '';
+  showToast('שיעורי הבית נשלחו לכיתה ✅');
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+function init(){
+  loadState();
+  document.body.classList.toggle('light', !state.darkMode);
+  if(state.profile.name){
+    ensureDailyReset();
+    showScreen('home');
+  } else {
+    showScreen('splash');
+  }
+}
+init();
+</script>
+</body>
+</html>
